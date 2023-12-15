@@ -18,8 +18,9 @@ CONFIG_SLEEP = 'sleep'
 CONFIG_URL_QUOTE = 'url_quote'  # {'url_quote': ':/='} 表示不转义这三个字符
 
 CONFIG_PROXY = "proxy"
-HEADERS_KEYS = ['user-agent', 'sec-ch-ua', 'referer', 'cookie']
+# HEADERS_KEYS = ['user-agent', 'sec-ch-ua', 'referer', 'cookie']
 
+# [{'url': url, 'file_name': file_name, 'dir': 'C://xxxx/xxx/xxx', 'page': 1}, {...}, ...]
 DOWNLOAD_DIR = 'dir'
 FILE_NAME = 'file_name'
 URL = 'url'
@@ -27,56 +28,47 @@ URL = 'url'
 CH_UA_DEFAULT = '".Not/A)Brand";v="99", "Google Chrome";v="103", "Chromium";v="103"'
 
 
-class downloader:
+class Downloader:
 
-    def __init__(self, config):
-        self.init_opener(config)
+    def __init__(self, settings):
+        self.opener = urllib.request.build_opener()
         self.downloading_filename = 'None'
         self.timeout = TIMEOUT_DEFAULT
         self.max_retry = MAX_RETRY_DEFAULT
         self.sleep = 0
         self.url_quote = None
-        if CONFIG_MAX_RETRY in config:
-            self.max_retry = config[CONFIG_MAX_RETRY]
-        if CONFIG_TIMEOUT in config:
-            self.timeout = config[CONFIG_TIMEOUT]
-        if CONFIG_SLEEP in config:
-            self.sleep = config[CONFIG_SLEEP]
-        if CONFIG_URL_QUOTE in config:
-            self.url_quote = config[CONFIG_URL_QUOTE]
+        if CONFIG_MAX_RETRY in settings:
+            self.max_retry = settings[CONFIG_MAX_RETRY]
+        if CONFIG_TIMEOUT in settings:
+            self.timeout = settings[CONFIG_TIMEOUT]
+        if CONFIG_SLEEP in settings:
+            self.sleep = settings[CONFIG_SLEEP]
+        if CONFIG_URL_QUOTE in settings:
+            self.url_quote = settings[CONFIG_URL_QUOTE]
 
-    def init_opener(self, _config):
-        self.opener = urllib.request.build_opener()
-        if _config is None:
-            return
-        if CONFIG_PROXY in _config and len(_config[CONFIG_PROXY]) > 0:
-            # 添加 http 代理
-            proxy_server = _config[CONFIG_PROXY]
-            proxy = urllib.request.ProxyHandler({'http': proxy_server})
-            self.opener = urllib.request.build_opener(proxy)
-            print(f'使用代理: {proxy_server}')
-        # HTTP HEADERS 配置项
-        self.opener.addheaders = []
-        # 默认 UA
-        if 'user-agent' not in _config:
-            _config['user-agent'] = CH_UA_DEFAULT
-        if 'sec-ch-ua' not in _config:
-            _config['sec-ch-ua'] = CH_UA_DEFAULT
-        for header_key in HEADERS_KEYS:
-            if header_key in _config:
-                print(f'配置 {header_key}: {_config[header_key]}')
-                self.opener.addheaders.append((header_key, _config[header_key]))
+    def set_proxy(self, proxy_server):
+        proxy = urllib.request.ProxyHandler({'http': proxy_server})
+        self.opener = urllib.request.build_opener(proxy)
+        print(f'使用代理: {proxy_server}')
+
+    def set_headers(self, headers=None):
+        if not headers:
+            headers = {}
+        if 'user-agent' not in headers:
+            headers['user-agent'] = CH_UA_DEFAULT
+            print(f'默认使用 sec-ch-ua: {CH_UA_DEFAULT}')
+        if 'sec-ch-ua' not in headers:
+            headers['sec-ch-ua'] = CH_UA_DEFAULT
+            print(f'默认使用 user-agent: {CH_UA_DEFAULT}')
+        for header_key in headers:
+            print(f'配置 {header_key}: {headers[header_key]}')
+            self.opener.addheaders.append((header_key, headers[header_key]))
         print("Opener addheaders: ", self.opener.addheaders)
 
-    '''
-    ----------------- 下载 ----------------------------
-    '''
-
-    def download(self, task_list, dir_path=None):
+    def download(self, task_list):
         '''
-        :param tasks: 下载任务信息[{'url': url, 'file_name': file_name}, {...}, ...]
-        :param dir_path: 下载目录
-        :param config: 下载配置, proxy 与 referer 等
+        :param task_list: 下载任务信息[{'url': url, 'file_name': file_name, 'dir': 'C://xxx/xx', 'page': 1}, {...}, ...]
+        :param dir_path: 下载目录, 如果 json 里单独设置了 dir，
         :return:
         '''
         print("----------- Start Download -----------")
@@ -93,10 +85,9 @@ class downloader:
             sys.stdout.write('\r')
             sys.stdout.flush()
             # 优先下载到任务配置的目录
+            dir_path = "download_undefined"
             if DOWNLOAD_DIR in task.keys():
                 dir_path = task[DOWNLOAD_DIR]
-            elif dir_path == None:
-                dir_path = "download_undefined"
             if not os.path.exists(dir_path):
                 os.makedirs(dir_path)
 
@@ -147,7 +138,7 @@ class downloader:
         # 下载任务结束
         sys.stdout.write('\r')
         sys.stdout.flush()
-        print(f'Download finished {downloaded}/{total}!\nSaved at \\{dir_path}')
+        print(f'Download finished {downloaded}/{total}!')
         if len(failed) > 0:
             print(f'{len(failed)}\\{total} download failed!!')
             print("failed tasks: ")
