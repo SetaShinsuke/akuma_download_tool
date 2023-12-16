@@ -25,6 +25,7 @@ DOWNLOAD_DIR = 'dir'
 FILE_NAME = 'file_name'
 URL = 'url'
 
+UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
 CH_UA_DEFAULT = '".Not/A)Brand";v="99", "Google Chrome";v="103", "Chromium";v="103"'
 
 
@@ -52,14 +53,15 @@ class Downloader:
         print(f'使用代理: {proxy_server}')
 
     def set_headers(self, headers=None):
+        self.opener.addheaders = []
         if not headers:
             headers = {}
         if 'user-agent' not in headers:
-            headers['user-agent'] = CH_UA_DEFAULT
-            print(f'默认使用 sec-ch-ua: {CH_UA_DEFAULT}')
+            headers['user-agent'] = UA
+            print(f'默认使用  user-agent: {UA}')
         if 'sec-ch-ua' not in headers:
             headers['sec-ch-ua'] = CH_UA_DEFAULT
-            print(f'默认使用 user-agent: {CH_UA_DEFAULT}')
+            print(f'默认使用 sec-ch-ua: {CH_UA_DEFAULT}')
         for header_key in headers:
             print(f'配置 {header_key}: {headers[header_key]}')
             self.opener.addheaders.append((header_key, headers[header_key]))
@@ -80,6 +82,8 @@ class Downloader:
         sleep = self.sleep
         # max_amount = 1
         print(f'max_amount: {max_amount}')
+        urllib.request.install_opener(self.opener)
+        print(f'Opener installed')
 
         for task in tasks:
             sys.stdout.write('\r')

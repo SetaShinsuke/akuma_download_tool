@@ -20,7 +20,7 @@ DIR = 'dir'
 DOWNLOAD_SETTINGS = 'download_settings'
 
 # todo: 测试数量
-TEST_AMOUNT = -1
+TEST_AMOUNT = 1
 
 
 class CrawlerGeneral:
@@ -73,14 +73,13 @@ class CrawlerGeneral:
             headers.update(config[HEADERS])
         downloader.set_headers(headers)
         # 下载路径
-        book_name = f'book_unknown_{datetime.now().microsecond}'
-        vol_no = ''
+        book_name = f'book_unknown'
+        vol_no = f'{datetime.now().microsecond}'
         if BOOK_NAME in config:  # /download/火影忍者
             book_name = config[BOOK_NAME]
-            download_path = os.path.join(self.download_root, book_name)
         if VOL_NO in config:  # /download/火影忍者/火影忍者Vol001
-            vol_no = config[VOL_NO]
-            download_path = os.path.join(download_path, f'{book_name}_Vol{vol_no}')
+            vol_no = f'_Vol{config[VOL_NO]}'
+        download_path = os.path.join(self.download_root, f'{book_name}{vol_no}')
 
         tasks = []
         for k in task_json:
@@ -89,6 +88,7 @@ class CrawlerGeneral:
             chapter_name = utils.verify_file_name(k)
             dir = os.path.join(download_path, chapter_name)
             page_details = task_json[k]
+            # todo: 获取 token，更新 url
             i = 0
             for p in page_details:
                 if TEST_AMOUNT > 0 and i >= TEST_AMOUNT:
