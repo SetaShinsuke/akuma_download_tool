@@ -36,6 +36,7 @@ if not selected_files:
 crawler_general = crawler_general.CrawlerGeneral(selected_files, download_dir)
 
 do_zip = askquestion('提示', '已选择任务文件\n是否按 tasks.json 打包?')
+do_zip = do_zip == 'yes'
 
 result = crawler_general.start_download(do_zip)
 len = len(result)

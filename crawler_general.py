@@ -4,23 +4,26 @@ import sys, json
 from datetime import datetime
 import shutil
 
-from Tools import download_tool
-from Common import utils
+from tools import download_tool, token_tool
+from common import utils
+from common.browser_info import UA
 
-UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
-
+# 任务信息配置
 BOOK_NAME = 'book_name'
 VOL_NO = 'vol_no'
+DIR = 'dir'
+NEED_TOKEN = 'need_token'
+# 代理、headers配置
 PROXY = 'proxy'
 REFERER = 'referer'  # 可以单独配置也可以在 headers 里
 HEADERS = 'headers'  # config['headers']
-DIR = 'dir'
 
 # 下载器设置: max_retry, timeout, sleep, url_quote
+# {"config": {"download_settings" : {} }}
 DOWNLOAD_SETTINGS = 'download_settings'
 
 # todo: 测试数量
-TEST_AMOUNT = 1
+TEST_AMOUNT = -1
 
 
 class CrawlerGeneral:
@@ -88,7 +91,21 @@ class CrawlerGeneral:
             chapter_name = utils.verify_file_name(k)
             dir = os.path.join(download_path, chapter_name)
             page_details = task_json[k]
-            # todo: 获取 token，更新 url
+            # 获取 token，更新 url
+            if NEED_TOKEN in config and config[NEED_TOKEN] == 'true':
+                print(f'获取 Token')
+                tok_tool = token_tool.TokenTool()
+                pics = []
+                for p in page_details:
+                    pics.append(p['url'])
+                # 获取 token
+                real_urls = tok_tool.get_tokened_urls(pics)
+                i = 0
+                for p in page_details:
+                    p['url'] = real_urls[i]
+                    i += 1
+                # print(page_details)
+
             i = 0
             for p in page_details:
                 if TEST_AMOUNT > 0 and i >= TEST_AMOUNT:

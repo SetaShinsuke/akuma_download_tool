@@ -7,7 +7,8 @@ import urllib.parse
 import time
 
 sys.path.append('../')
-from Common import utils
+from common import utils
+from common.browser_info import UA, SEC_UA
 
 MAX_RETRY_DEFAULT = 4
 TIMEOUT_DEFAULT = 30
@@ -24,10 +25,6 @@ CONFIG_PROXY = "proxy"
 DOWNLOAD_DIR = 'dir'
 FILE_NAME = 'file_name'
 URL = 'url'
-
-UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
-CH_UA_DEFAULT = '".Not/A)Brand";v="99", "Google Chrome";v="103", "Chromium";v="103"'
-
 
 class Downloader:
 
@@ -60,8 +57,8 @@ class Downloader:
             headers['user-agent'] = UA
             print(f'默认使用  user-agent: {UA}')
         if 'sec-ch-ua' not in headers:
-            headers['sec-ch-ua'] = CH_UA_DEFAULT
-            print(f'默认使用 sec-ch-ua: {CH_UA_DEFAULT}')
+            headers['sec-ch-ua'] = SEC_UA
+            print(f'默认使用 sec-ch-ua: {SEC_UA}')
         for header_key in headers:
             print(f'配置 {header_key}: {headers[header_key]}')
             self.opener.addheaders.append((header_key, headers[header_key]))
