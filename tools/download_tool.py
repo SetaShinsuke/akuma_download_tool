@@ -6,12 +6,15 @@ import socket
 import urllib.parse
 import time
 
-sys.path.append('../')
+from tools.downloader_meta import DownloaderMeta # 抽象类
+from tools.downloader_meta import DOWNLOAD_DIR, FILE_NAME, URL
+
+# sys.path.append('../')
 from common import utils
 from common.browser_info import UA, SEC_UA
 
-MAX_RETRY_DEFAULT = 4
-TIMEOUT_DEFAULT = 30
+MAX_RETRY_DEFAULT = 5
+TIMEOUT_DEFAULT = 60
 
 CONFIG_MAX_RETRY = 'max_retry'
 CONFIG_TIMEOUT = 'timeout'
@@ -22,11 +25,11 @@ CONFIG_PROXY = "proxy"
 # HEADERS_KEYS = ['user-agent', 'sec-ch-ua', 'referer', 'cookie']
 
 # [{'url': url, 'file_name': file_name, 'dir': 'C://xxxx/xxx/xxx', 'page': 1}, {...}, ...]
-DOWNLOAD_DIR = 'dir'
-FILE_NAME = 'file_name'
-URL = 'url'
+# DOWNLOAD_DIR = 'dir'
+# FILE_NAME = 'file_name'
+# URL = 'url'
 
-class Downloader:
+class Downloader(DownloaderMeta):
 
     def __init__(self, settings):
         self.opener = urllib.request.build_opener()
@@ -147,8 +150,8 @@ class Downloader:
                 print(t)
         return failed
 
-    def filter_fun(_self, item):
-        return type(item) is dict and URL in item.keys() and item[URL].startswith("http")
+    # def filter_fun(_self, item):
+    #     return type(item) is dict and URL in item.keys() and item[URL].startswith("http")
 
     def _progress(_self, block_num, block_size, total_size):
         '''回调函数

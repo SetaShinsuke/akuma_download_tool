@@ -1,8 +1,16 @@
-import os
+import os, sys
 from pathlib import Path
 from tkinter import filedialog as fd
-from tkinter.messagebox import showinfo, showwarning, askquestion
-import crawler_general
+from tkinter.messagebox import showwarning, askquestion
+from crawlers.crawler_general import CrawlerGeneral
+
+# 额外参数
+use_idm = False
+args = sys.argv
+if len(args) > 1:
+    if '--use-idm' in args:
+        use_idm = True
+        print(f'Use idm: True')
 
 tasks_dir = os.path.join(os.getcwd(), 'tasks')
 download_dir = os.path.join(os.getcwd(), 'download')
@@ -33,15 +41,20 @@ if not selected_files:
     else:
         selected_files = []
 
-crawler_general = crawler_general.CrawlerGeneral(selected_files, download_dir)
-
-do_zip = askquestion('提示', '已选择任务文件\n是否按 tasks.json 打包?')
-do_zip = do_zip == 'yes'
-
+crawler_general = CrawlerGeneral(selected_files, download_dir)
+crawler_general.set_use_idm(use_idm)
+do_zip = False
+if not use_idm:
+    do_zip = askquestion('提示', '已选择任务文件\n是否按 tasks.json 打包?')
+    do_zip = do_zip == 'yes'
 result = crawler_general.start_download(do_zip)
-len = len(result)
-if len > 0:
-    showwarning('警告', f'有{len}任务下载失败!')
 
-if len > 0 or askquestion('提示', '任务结束\n是否查看?'):
-    os.startfile(download_dir)
+if use_idm:
+    print('已添加任务至IDM!')
+else:
+    len = len(result)
+    if len > 0:
+        showwarning('警告', f'有{len}任务下载失败!')
+
+    if len > 0 or askquestion('提示', '任务结束\n是否查看?') == 'yes':
+        os.startfile(download_dir)

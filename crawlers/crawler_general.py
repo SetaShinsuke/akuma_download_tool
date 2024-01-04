@@ -4,7 +4,7 @@ import sys, json
 from datetime import datetime
 import shutil
 
-from tools import download_tool, token_tool
+from tools import download_tool, idm_tool, token_tool
 from common import utils
 from common.browser_info import UA
 
@@ -31,6 +31,11 @@ class CrawlerGeneral:
     def __init__(self, _task_files, _download_root):
         self.task_files = _task_files
         self.download_root = _download_root
+        self.use_idm = False
+
+    def set_use_idm(self, _use_idm):
+        print(f'Use idm: {_use_idm}')
+        self.use_idm = _use_idm
 
     def start_download(self, _do_zip):
         print(f'开始下载, do_zip: ${_do_zip}')
@@ -58,14 +63,17 @@ class CrawlerGeneral:
 
         settings = {}
         config = {}
-        download_path = os.path.join(self.download_root, f'book_unknown_{datetime.now().microsecond}')
+        # download_path = os.path.join(self.download_root, f'book_unknown_{datetime.now().microsecond}')
         if 'config' in task_json:
             config = task_json['config']
         # 下载器配置项
         if DOWNLOAD_SETTINGS in config:
             settings = config[DOWNLOAD_SETTINGS]
         # 新建下载器
-        downloader = download_tool.Downloader(settings)
+        if self.use_idm:
+            downloader = idm_tool.IdmTool(settings)
+        else:
+            downloader = download_tool.Downloader(settings)
         # 设置下载代理与headers
         if PROXY in config:
             downloader.set_proxy(config[PROXY])
@@ -77,7 +85,8 @@ class CrawlerGeneral:
         downloader.set_headers(headers)
         # 下载路径
         book_name = f'book_unknown'
-        vol_no = f'{datetime.now().microsecond}'
+        # vol_no = f'{datetime.now().microsecond}'
+        vol_no = ''
         if BOOK_NAME in config:  # /download/火影忍者
             book_name = config[BOOK_NAME]
         if VOL_NO in config:  # /download/火影忍者/火影忍者Vol001
@@ -105,7 +114,6 @@ class CrawlerGeneral:
                     p['url'] = real_urls[i]
                     i += 1
                 # print(page_details)
-
             i = 0
             for p in page_details:
                 if TEST_AMOUNT > 0 and i >= TEST_AMOUNT:
@@ -117,19 +125,22 @@ class CrawlerGeneral:
             print("添加书目: ", chapter_name, "(", i, " pages)")
         # 开始下载
         print(f'下载任务已录入, 准备开始: {len(tasks)} 个任务')
-        result = downloader.download(tasks)
-        failed_pages = []
-        if len(result) > 0:
-            log_file = os.path.join(download_path, f'crawler_log_{datetime.now().microsecond}.txt')
+        failed_pages = downloader.download(tasks)
+        if (self.use_idm):
+            # IDM 下载到此结束
+            return failed_pages
+        if len(failed_pages) > 0:
+            log_file = os.path.join(download_path, f'crawler_log_{datetime.now().microsecond}.json')
             f = open(log_file, "w+")
-            for item in result:
-                f.write(f'{item}\n')
-                failed_pages.append(item)
-                # if ('page' in item):
-                #     failed_pages.append(item['page'])
-                # else:
-                #     failed_pages.append(item)
-            f.write(f'Failed pages: \n{failed_pages}\n')
+            f.write(f'{failed_pages}')
+            # for item in result:
+            #     f.write(f'{item},')
+            #     failed_pages.append(item)
+            # if ('page' in item):
+            #     failed_pages.append(item['page'])
+            # else:
+            #     failed_pages.append(item)
+            # f.write(f'Failed pages: \n{failed_pages}\n')
             f.close()
         else:  # 没有失败任务
             base_name = os.path.basename(task_file)
