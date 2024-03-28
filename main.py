@@ -36,7 +36,7 @@ selected_files = fd.askopenfilenames(
 if not selected_files:
     use_tasks_dir = askquestion('提示', '未选择文件\n自动检查.\\tasks目录?')
     # 不自动检测 input 目录
-    if use_tasks_dir:
+    if use_tasks_dir == 'yes':
         selected_files = map(lambda file_name: os.path.join(tasks_dir, file_name), os.listdir(tasks_dir))
     else:
         selected_files = []
@@ -44,7 +44,8 @@ if not selected_files:
 crawler_general = CrawlerGeneral(selected_files, download_dir)
 crawler_general.set_use_idm(use_idm)
 do_zip = False
-if not use_idm:
+# <map>对象转成list
+if len(list(selected_files)) > 0 and not use_idm:
     do_zip = askquestion('提示', '已选择任务文件\n是否按 tasks.json 打包?')
     do_zip = do_zip == 'yes'
 result = crawler_general.start_download(do_zip)

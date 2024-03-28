@@ -3,6 +3,7 @@ import re
 import urllib.parse
 import pyperclip
 import sys
+import requests.utils
 
 def verify_file_name(file_name):
     file_name = file_name.replace('\\', '_').replace('/', '_')
@@ -13,9 +14,9 @@ def verify_file_name(file_name):
     return file_name
 
 
-def url_encode(string, encoding='utf-8'):
-    return urllib.parse.quote(string, encoding)
-
+def url_encode(string):
+    # return urllib.parse.quote(string, encoding)
+    return requests.utils.requote_uri(string)
 
 def url_decode(string, encoding='utf-8'):
     return urllib.parse.unquote(string, encoding)

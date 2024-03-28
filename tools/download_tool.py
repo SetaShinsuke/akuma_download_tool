@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import requests.utils
 import urllib.request
 import sys
 import os
@@ -6,7 +7,7 @@ import socket
 import urllib.parse
 import time
 
-from tools.downloader_meta import DownloaderMeta # 抽象类
+from tools.downloader_meta import DownloaderMeta  # 抽象类
 from tools.downloader_meta import DOWNLOAD_DIR, FILE_NAME, URL
 
 # sys.path.append('../')
@@ -22,6 +23,8 @@ CONFIG_SLEEP = 'sleep'
 CONFIG_URL_QUOTE = 'url_quote'  # {'url_quote': ':/='} 表示不转义这三个字符
 
 CONFIG_PROXY = "proxy"
+
+
 # HEADERS_KEYS = ['user-agent', 'sec-ch-ua', 'referer', 'cookie']
 
 # [{'url': url, 'file_name': file_name, 'dir': 'C://xxxx/xxx/xxx', 'page': 1}, {...}, ...]
@@ -101,6 +104,8 @@ class Downloader(DownloaderMeta):
             # 检查文件名与url
             if self.url_quote:
                 file_url = urllib.parse.quote(file_url, safe=self.url_quote)
+            # 文件地址编码
+            file_url = requests.utils.requote_uri(file_url)
             if FILE_NAME in task.keys():
                 file_name = task[FILE_NAME]
             else:
